@@ -1,11 +1,12 @@
 import pygame as pg
 import math as m
 from random import randint
+from abc import ABC, abstractmethod
 
 RES = WIDTH, HEIGHT = 1300, 700
 FPS = 120
-G = 6 # gravity constant
-planets = list() # list o the planets
+G = 6  # gravity constant
+planets = list()  # list o the planets
 
 pg.init()
 done = False
@@ -20,20 +21,35 @@ def event_overview(events):
             done = True
 
 
-class HeavenBody:
-    standard_radius = 10
+class Body(ABC):
 
-    def __init__(self, mass, x, y, V, ang):
+    @abstractmethod
+    def __init__(self, mass, x, y, r):
         self.m = mass
         self.x, self.y = x, y
+        self.r = r
+        self.color = (randint(0, 255), randint(0, 255), randint(0, 255))
+
+    @abstractmethod
+    def move(self):
+        pass
+
+    @abstractmethod
+    def draw(self):
+        pg.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.r)
+
+
+class MovementBody(Body):
+    standard_radius = 5
+
+    def __init__(self, mass, x, y, V=0.0, ang=0, r=standard_radius):
+        super(MovementBody, self).__init__(mass, x, y, r)
         self.Vx, self.Vy = V * m.cos(ang / 180 * m.pi), V * m.sin(ang / 180 * m.pi)
-        self.r = HeavenBody.standard_radius
         self.tracer = [(0, 0) for i in range(1001)]
         self.tracer[0] = (x, y)
         self.it = 1
-        self.color = (randint(0, 255), randint(0, 255), randint(0, 255))
 
-    def move(self, p, lenght):
+    def move(self, p=None, lenght=0):
         acceleration = a(p.m, lenght)
         k = lenght / acceleration
         self.Vx += (p.x - self.x) / k
@@ -51,6 +67,19 @@ class HeavenBody:
         self.it += 1
 
 
+class StaticBody(Body):
+    standard_radius = 15
+
+    def __init__(self, mass, x, y, r=standard_radius):
+        super(StaticBody, self).__init__(mass, x, y, r)
+
+    def move(self):
+        pass
+
+    def draw(self):
+        super(StaticBody, self).draw()
+
+
 def a(mass, lenght):
     return G * mass / lenght ** 2
 
@@ -61,19 +90,18 @@ def r(p1, p2):
 
 def calculation_and_drawing(planets):
     for i in range(-1, len(planets) - 1):
+        if type(planets[i]) == StaticBody:
+            continue
         distance = r(planets[i], planets[i + 1])
         planets[i].move(planets[i + 1], distance)
-        planets[i + 1].move(planets[i], distance)
     for planet in planets:
         planet.draw()
 
 
 def main_loop():
     global done
-    pl1 = HeavenBody(333, WIDTH // 2, HEIGHT // 2, 0, 0)
-    pl2 = HeavenBody(1, WIDTH // 2, HEIGHT // 2 + 150, 3.5, 0)
-    planets.append(pl1)
-    planets.append(pl2)
+    planets.append(StaticBody(333, WIDTH // 2, HEIGHT // 2))
+    planets.append(MovementBody(1, WIDTH // 2, HEIGHT // 2 + 150, 3.5, 0))
     while not done:
         surface.fill(pg.Color("black"))
         event_overview(pg.event.get())
