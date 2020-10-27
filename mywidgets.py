@@ -3,7 +3,7 @@ import time as t
 
 
 class Label:
-    def __init__(self, surface, text, color, size, x, y):
+    def __init__(self, surface, x, y, text, size, color):
         font_name = pg.font.match_font("colibri")
         font = pg.font.Font(font_name, size)
         self.text_surface = font.render(text, True, color)
@@ -24,7 +24,7 @@ class Button(pg.sprite.Sprite):
         self.width = width
         self.height = height
         self.command = command
-        self.label = Label(surface, text, txt_color, size, x + width // 2, y + height // 2)
+        self.label = Label(surface, x + width // 2, y + height // 2, text, size, txt_color)
         self.delta_click = t.time()
         self.surface = surface
         self.btn_color = btn_color
@@ -65,7 +65,7 @@ class TextInput:
         self.x, self.y = x, y
         self.width, self.height = width, height
         self.text = ""
-        self.text_box = Label(surface, self.text, (0, 0, 0), height, x, y)
+        self.text_box = Label(surface, x + width // 2, y + height // 4, self.text, height, (0, 0, 0))
         self.surface = surface
         self.active = False
         self.color = (100, 100, 100)
@@ -80,14 +80,16 @@ class TextInput:
         return False
 
     def user_text_input(self, event):
-        if self.active:
-            if event.key == pg.K_BACKSPACE:
-                self.text = self.text[:-1]
-            elif event.key == pg.K_RETURN:
-                return self.text
-            else:
-                self.text += event.unicode
-            self.text_box = Label(self.surface, self.text, (0, 0, 0), self.height, self.x + self.width // 2, self.y)
+        if event.type == pg.KEYDOWN:
+            if self.active:
+                if event.key == pg.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                elif event.key == pg.K_RETURN:
+                    return self.text
+                else:
+                    self.text += event.unicode
+                self.text_box = Label(self.surface, self.x + self.width // 2, self.y + self.height // 4,
+                                      self.text, self.height, (0, 0, 0))
 
     def draw(self):
         pg.draw.rect(self.surface, self.color, self.rect, 0)

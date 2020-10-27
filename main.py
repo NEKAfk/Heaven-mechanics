@@ -20,22 +20,24 @@ FLAG = False
 
 pg.init()
 screen = pg.display.set_mode(RES, pg.RESIZABLE)
+pg.display.set_caption("Heaven")
+DONE = False
+RESET = False
+clock = pg.time.Clock()
+
 bg_image = pg.image.load("bg.png")
 bg = Background(screen, bg_image)
-pg.display.set_caption("Heaven")
 star = pg.image.load("Bodies/sun.png")
 earth = pg.image.load("Bodies/earth.png")
 saturn = pg.image.load("Bodies/saturn.png")
-DONE = False
-clock = pg.time.Clock()
 
 
 def event_overview(events, btns, txt_inputs):
-    global DONE
+    global DONE, RESET
     global CLICK_POS_DOWN, CLICK_POS_UP
     for event in events:
         if event.type == pg.QUIT:
-            DONE = True
+            DONE = RESET = True
         elif event.type == pg.MOUSEBUTTONDOWN:
             CLICK_POS_DOWN = pg.mouse.get_pos()
             click_buttons(btns)
@@ -44,8 +46,7 @@ def event_overview(events, btns, txt_inputs):
             global CLICK_POS_UP
             CLICK_POS_UP = pg.mouse.get_pos()
             spawn_bodies()
-        elif event.type == pg.KEYDOWN:
-            user_input(event, txt_inputs)
+        user_input(event, txt_inputs)
 
 
 class Body(ABC):
@@ -204,9 +205,9 @@ def spawn_bodies():
         Vx = (CLICK_POS_UP[0] - CLICK_POS_DOWN[0]) / 25
         Vy = (CLICK_POS_UP[1] - CLICK_POS_DOWN[1]) / 25
         if Vx == 0 and Vy == 0:
-            planets.append(StaticBody(250, CLICK_POS_DOWN[0], CLICK_POS_DOWN[1], star))
+            planets.append(StaticBody(int(mass_input.text), CLICK_POS_DOWN[0], CLICK_POS_DOWN[1], star))
         else:
-            planets.append(MovementBody(1, CLICK_POS_DOWN[0], CLICK_POS_DOWN[1], Vx, Vy, earth))
+            planets.append(MovementBody(int(mass_input.text), CLICK_POS_DOWN[0], CLICK_POS_DOWN[1], Vx, Vy, earth))
 
 
 def cursor_line():
@@ -215,13 +216,20 @@ def cursor_line():
         pg.draw.line(screen, (255, 0, 0), CLICK_POS_DOWN, pg.mouse.get_pos(), 2)
 
 
+def reset():
+    global RESET
+    RESET = True
+
+
+mass_input = TextInput(screen, 0, 0, 200, 100)
+res = Button(screen, WIDTH - 200, 0, 200, 100, reset, "RESET", 50, bg_image, (0, 255, 0))
+
+
 def main_loop():
-    global DONE
-    buttons.append(Button(screen, 0, 0, 250, 100, lambda: print("Slave"), "Switch", 50, bg_image, (0, 255, 0)))
-    text_inputs.append(TextInput(screen, 300, 0, 200, 100))
-    planets.append(StaticBody(250, WIDTH // 2, HEIGHT // 2, star))
-    planets.append(MovementBody(10, WIDTH // 2, HEIGHT // 2 + 300, 2.25, 0, saturn))
-    while not DONE:
+    global RESET, planets
+    RESET = False
+    planets = list()
+    while not RESET:
         bg.draw()
         event_overview(pg.event.get(), buttons, text_inputs)
         cursor_line()
@@ -234,4 +242,7 @@ def main_loop():
 
 
 if __name__ == "__main__":
-    main_loop()
+    buttons.append(res)
+    text_inputs.append(mass_input)
+    while not DONE:
+        main_loop()
