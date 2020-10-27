@@ -33,13 +33,14 @@ saturn = pg.image.load("Bodies/saturn.png")
 
 
 def event_overview(events, btns, txt_inputs):
-    global DONE, RESET
+    global DONE, RESET, FLAG
     global CLICK_POS_DOWN, CLICK_POS_UP
     for event in events:
         if event.type == pg.QUIT:
             DONE = RESET = True
         elif event.type == pg.MOUSEBUTTONDOWN:
             CLICK_POS_DOWN = pg.mouse.get_pos()
+            FLAG = False
             click_buttons(btns)
             click_text_inputs(txt_inputs)
         elif event.type == pg.MOUSEBUTTONUP:
@@ -178,7 +179,6 @@ def draw_buttons(btns):
 
 def click_buttons(btns):
     global FLAG
-    FLAG = False
     for btn in btns:
         FLAG = FLAG or btn.click(CLICK_POS_DOWN)
 
@@ -190,7 +190,6 @@ def draw_text_inputs(txt_inputs):
 
 def click_text_inputs(txt_inputs):
     global FLAG
-    FLAG = False
     for txt_input in txt_inputs:
         FLAG = FLAG or txt_input.click(CLICK_POS_DOWN)
 
@@ -233,10 +232,10 @@ def main_loop():
         bg.draw()
         event_overview(pg.event.get(), buttons, text_inputs)
         cursor_line()
-        calculation_moves(planets)
-        draw_bodies(planets)
         draw_buttons(buttons)
         draw_text_inputs(text_inputs)
+        calculation_moves(planets)
+        draw_bodies(planets)
         pg.display.flip()
         clock.tick(FPS)
 
